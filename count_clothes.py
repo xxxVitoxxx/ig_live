@@ -52,7 +52,7 @@ def orderCustomerList(df):
     
     for i in df.index:
         # 檢查 A 欄是標號的
-        if df['標籤'][i] != '' and df['標籤'][i].strip()[0] == '標':
+        if df['標籤'][i] != '' and df['標籤'][i][0] == '標':
             # print('name-------: ', df['標籤'][i], '-', df['顏色/尺寸'][i])
             count[df['標籤'][i]] = {}
             count[df['標籤'][i]][df['商品名稱'][i]] = {}
@@ -68,30 +68,42 @@ def orderCustomerList(df):
                 
                 count[df['標籤'][i]][df['商品名稱'][i]][df['顏色/尺寸'][i]] = account_list
         # 檢查 A 欄不是標號
-        if (df['標籤'][i] == '' or df['標籤'][i].strip()[0] != '標'):
-            alist = []
+        elif (df['標籤'][i] == '' or df['標籤'][i].strip()[0] != '標'):
             # 檢查商品名稱沒空白
             if any(df['商品名稱'][i]):
+                alist = []
+
                 for x, y in count.items():
                     if df['商品名稱'][i] in y.keys():
+                        # if not any(df['IG account1'][i]):
+                        #     count[x][df['商品名稱'][i]][df['顏色/尺寸'][i]] = []
+                        print('before: ', count)
                         for j in range(1, 11):
                             # print('dd')
                             # print(df['顏色/尺寸'][i])
+                            # 如果 IG account 有帳號繼續加帳號清單，沒有就離開
                             if any(str(df['IG account'+str(j)][i])):
                                 alist.append(str(df['IG account'+str(j)][i]))
                                 
                             else:
                                 break
                         count[x][df['商品名稱'][i]][df['顏色/尺寸'][i]] = alist
+                        print('alist: ', alist)
+                        if df['商品名稱'][i] == '大圍巾' and df['顏色/尺寸'][i] == '灰':
+                            print("x: ", x, 'i: ', i)
+                            print('名稱： ', df['商品名稱'][i], 'color: ', df['顏色/尺寸'][i])
+                            print("checkkkkkkkk: ", count)
 
             # 如果商品名稱空白但 IG account1有帳號
-            elif not any(df['商品名稱'][i]) and any(df['IG account1'][i]): 
-
+            if not any(df['商品名稱'][i]) and any(df['IG account1'][i]): 
+                # 將原本帳號清單指定給變數
+                ll = []
                 for j in range(1, 11):
                     # 檢查是否有帳號
                     if  df['IG account'+str(j)][i] != "":
-                        alist.append(str(df['IG account'+str(j)][i]))
+                        ll.append(str(df['IG account'+str(j)][i]))
 
+                # 往上最多回搜 5 行
                 for row in range(1, 6):
                     if i-row >= 0 and df['商品名稱'][i-row] != '':
                         # 找
@@ -102,14 +114,14 @@ def orderCustomerList(df):
                             # print('bool: ',df['商品名稱'][i-row] in y.keys())
                             if df['商品名稱'][i-row] in y.keys():
 
-                                for v in alist:
+                                for v in ll:
                                     count[x][df['商品名稱'][i-row]][df['顏色/尺寸'][i-row]].append(v)
 
     return count
 
 def check(df, ws, count, order):
-    print(count)
-    print('-----')
+    # print(count)
+    # print('-----')
     # k -> 標號
     for k, v in order.items():
         # i -> 商品名稱
@@ -118,9 +130,9 @@ def check(df, ws, count, order):
             # y -> 下單名單 list
             for x, y in j.items():
                 sum = count[k][i][x]
-                print(k, '-', i, '-', x, '===', y, 'total: ', sum)
-                print('len(y)', len(y))
-                print('sum: ', sum)
+                # print(k, '-', i, '-', x, '===', y, 'total: ', sum)
+                # print('len(y)', len(y))
+                # print('sum: ', sum)
                 # 標1 - 高領長版針衣 - 白 === ['tiny_ashleyyyeee ']
                 if len(y) == 0:
                     df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '上限'] = False
@@ -128,6 +140,7 @@ def check(df, ws, count, order):
 
                 if len(y) > 0 and len(y) < sum:
                     df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '上限'] = False
+                    print("haa: ", len(y), sum)
                     buy = ', '.join(y)
                     df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '通知'] = '{} {} 得標者: {}'.format(k, x, buy)
                     print('-ddddfffe: ', '{} {} 得標者: {}'.format(k, x, buy))
@@ -149,6 +162,7 @@ def check(df, ws, count, order):
                     # print(df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '通知'])
     print('df: ', df)
     print('-------------------')
+    # 不知道怎麼將更新過的 df 更新到 sheets 上，所以暫用迴圈賦值
     for i in df.index:
         # print(i)
         # # print(df['商品名稱'][i], df['顏色/尺寸'])
@@ -195,6 +209,8 @@ if __name__ == '__main__':
     o = orderCustomerList(df)
     ws = sht.worksheet_by_title('商品')
     check(df, ws, c, o)
+    print(df['商品名稱'][140], df['顏色/尺寸'][140])
+    print(any(df['商品名稱'][140]))
 
 
     # scheduler = BlockingScheduler()
