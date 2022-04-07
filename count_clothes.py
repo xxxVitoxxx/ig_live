@@ -11,8 +11,7 @@ def openGoogleSheets(url):
 # 計算商品各標號數量
 def countCommodity(sht):
     count = {}
-    # df = pd.DataFrame(sht.worksheet_by_title('商品').get_all_records())
-
+    
     for i in df.index:
         # if column A has label, add data to dictionary 
         if df['標籤'][i] != '' and df['標籤'][i][0] == '標':
@@ -63,7 +62,7 @@ def orderCustomerList(df):
                 for j in range(1, 11):
                     # 檢查是否有帳號
                     if  df['IG account'+str(j)][i] != "":
-                        account_list.append(df['IG account'+str(j)][i])
+                        account_list.append(str(df['IG account'+str(j)][i]))
                     else:
                         break
                 
@@ -78,8 +77,8 @@ def orderCustomerList(df):
                         for j in range(1, 11):
                             # print('dd')
                             # print(df['顏色/尺寸'][i])
-                            if any(df['IG account'+str(j)][i]):
-                                alist.append(df['IG account'+str(j)][i])
+                            if any(str(df['IG account'+str(j)][i])):
+                                alist.append(str(df['IG account'+str(j)][i]))
                                 
                             else:
                                 break
@@ -91,7 +90,7 @@ def orderCustomerList(df):
                 for j in range(1, 11):
                     # 檢查是否有帳號
                     if  df['IG account'+str(j)][i] != "":
-                        alist.append(df['IG account'+str(j)][i])
+                        alist.append(str(df['IG account'+str(j)][i]))
 
                 for row in range(1, 6):
                     if i-row >= 0 and df['商品名稱'][i-row] != '':
@@ -108,7 +107,7 @@ def orderCustomerList(df):
 
     return count
 
-def check(df, count, order):
+def check(df, ws, count, order):
     print(count)
     print('-----')
     # k -> 標號
@@ -120,18 +119,73 @@ def check(df, count, order):
             for x, y in j.items():
                 sum = count[k][i][x]
                 print(k, '-', i, '-', x, '===', y, 'total: ', sum)
+                print('len(y)', len(y))
+                print('sum: ', sum)
                 # 標1 - 高領長版針衣 - 白 === ['tiny_ashleyyyeee ']
+                if len(y) == 0:
+                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '上限'] = False
+                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '通知'] = ''
+
                 if len(y) > 0 and len(y) < sum:
-                    txt = df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x) ]
-                    print('ssss:', txt['標籤'])
-                    txt['通知'] = 'haaa'
-                    print(txt)
+                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '上限'] = False
+                    buy = ', '.join(y)
+                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '通知'] = '{} {} 得標者: {}'.format(k, x, buy)
+                    print('-ddddfffe: ', '{} {} 得標者: {}'.format(k, x, buy))
+
+                if len(y) == sum:
+                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '上限'] = True
+                    buy = ', '.join(y)
+                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '通知'] = '{} {} 得標者: {}'.format(k, x, buy)
+
+                if len(y) > sum:
+                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '上限'] = True
+                    buy = ', '.join(y[:sum])
+                    cant_buy = ', '.join(y[sum:])
+                    # print('join: ', y[sum:-1])
+                    # print("buy: ", buy)
+                    # print("cant buy: ", cant_buy)
+                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '通知'] = '{} {} 得標者: {}\n候補: {}'.format(k, x, buy, cant_buy)
+                    # print('{} {} 得標者: {}\n候補: {}'.format(k, x, buy, cant_buy))
+                    # print(df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '通知'])
+    print('df: ', df)
+    print('-------------------')
+    for i in df.index:
+        # print(i)
+        # # print(df['商品名稱'][i], df['顏色/尺寸'])
+        # print('name: ', df['商品名稱'][i])
+        # print(ws.get_value('B'+str(i+2)))
+        # print('---')
+        # print('color: ', df['顏色/尺寸'][i])
+        # print(ws.get_value('C'+str(i+2)))
+
+        print()
+        if any(df['商品名稱'][i]) and any(df['顏色/尺寸'][i]):
+            print(i)
+            ck = pd.notnull(df.iloc[i,19])
+            print(df.iloc[i,19])
+            # ck = pd.notnull(df.iloc[i,19]) and any(df.iloc[i,19])
+            print("ck: ", ck)
+            if ck:
+                ws.update_value('T'+ str(i+2), df['上限'][i]) # df['上限'][i]
+                print('上限', df['上限'][i])
+            ok = pd.notnull(df.iloc[i,20])
+            # ok = pd.notnull(df.iloc[i,20]) and any(df.iloc[i,20])
+            # print('yy: ', yy)
+            if ok:
+                ws.update_value('U'+ str(i+2), df['通知'][i])
+                print('通知', df['通知'][i])
+        # print(i)
+        # print(df.isnull(df.iloc[i,'上限']))
+    print('----------------------------------------------------------------')
+
+    # print(df)
                     
                 
 
 
 if __name__ == '__main__':
-    url = 'https://docs.google.com/spreadsheets/d/1RIxH4n5lPw734xynrK9xEGB37ftmniKqY7Mx8CixHog/edit#gid=1243175386'
+    url = 'https://docs.google.com/spreadsheets/d/11tHWJh-Dp7SdS9BokrPABPWi9eIjKc8qL9NZ3g_tDgc/edit#gid=1243175386'
+    # 'https://docs.google.com/spreadsheets/d/1RIxH4n5lPw734xynrK9xEGB37ftmniKqY7Mx8CixHog/edit#gid=1243175386'
     sht = openGoogleSheets(url)
     df = pd.DataFrame(sht.worksheet_by_title('商品').get_all_records())
     # print(countCommodity(sht))
@@ -139,7 +193,8 @@ if __name__ == '__main__':
     # print(df.loc[ df['標籤'] == '標10'])
     c = countCommodity(df)
     o = orderCustomerList(df)
-    check(df, c, o)
+    ws = sht.worksheet_by_title('商品')
+    check(df, ws, c, o)
 
 
     # scheduler = BlockingScheduler()
