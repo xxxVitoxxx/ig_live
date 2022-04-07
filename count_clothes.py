@@ -71,7 +71,11 @@ def orderCustomerList(df):
         elif (df['標籤'][i] == '' or df['標籤'][i].strip()[0] != '標'):
             # 檢查商品名稱沒空白
             if any(df['商品名稱'][i]):
+                # 防止
+                switch = True
                 alist = []
+                name = df['商品名稱'][i]
+                color = df['顏色/尺寸'][i]
 
                 for x, y in count.items():
                     if df['商品名稱'][i] in y.keys():
@@ -97,25 +101,41 @@ def orderCustomerList(df):
             # 如果商品名稱空白但 IG account1有帳號
             if not any(df['商品名稱'][i]) and any(df['IG account1'][i]): 
                 # 將原本帳號清單指定給變數
+                print('cccc: ', count)
                 ll = []
-                for j in range(1, 11):
-                    # 檢查是否有帳號
-                    if  df['IG account'+str(j)][i] != "":
-                        ll.append(str(df['IG account'+str(j)][i]))
+                
+                # for j in range(1, 11):
+                #     # 檢查是否有帳號
+                #     if  df['IG account'+str(j)][i] != "":
+                #         ll.append(str(df['IG account'+str(j)][i]))
 
-                # 往上最多回搜 5 行
-                for row in range(1, 6):
-                    if i-row >= 0 and df['商品名稱'][i-row] != '':
+                # 從該行開始，往上最多回搜 4 行
+                for row in range(5):
+                    print('i: {}, row: {}'.format(i, row))
+                    if df['商品名稱'][i-row] != '' and df['顏色/尺寸'][i-row] != '':
+                        break
+                    
+                    if i-row >= 0 and df['商品名稱'][i-row] == '' and df['顏色/尺寸'][i-row] == '':
+                        for j in range(1, 11):
+                            # 檢查是否有帳號
+                            if  df['IG account'+str(j)][i-row] != "":
+                                ll.append(str(df['IG account'+str(j)][i-row]))
+
+                print('ll: ', ll)
+                print('name: ', name)
+                print('color: ', color)
+
                         # 找
-                        for x, y in count.items():
-                            # print('xy: ', df['商品名稱'][i-row])
-                            # print('x: ', x)
-                            # print('y: ', y)
-                            # print('bool: ',df['商品名稱'][i-row] in y.keys())
-                            if df['商品名稱'][i-row] in y.keys():
+                for x, y in count.items():
+                    # print('xy: ', df['商品名稱'][i-row])
+                    # print('x: ', x)
+                    # print('y: ', y)
+                    # print('bool: ',df['商品名稱'][i-row] in y.keys())
+                    if name in y.keys():
 
-                                for v in ll:
-                                    count[x][df['商品名稱'][i-row]][df['顏色/尺寸'][i-row]].append(v)
+                        for v in ll:
+                            count[x][name][color].append(v)
+                print('ll count: ', count)
 
     return count
 
