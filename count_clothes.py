@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pygsheets
 import pandas as pd
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -45,12 +46,12 @@ def countCommodity(sht):
     # {'標1': {'高領長版針衣': {'桔': 8, '深灰': 3, '白': 11}}, '標2': {'藍莓優格小澎袖毛衣': {'深藍': 5}}, '標3': {'滾邊鋪棉背心': {'白': 2, '綠': 2, '咖': 4}}, '標4': {'菱格v針織上衣': {'紅': 3}}, '標5': {'針織側開上衣 桔5': {'': 0}}, '標6': {'撞色排釦毛衣 藍3': {'': 0}}, '標7': {'高領坑文寬鬆毛衣 黃 1+9': {'': 0}}, '標8': {'格子高腰開岔褲 3': {'': 0}}, '標9': {'撞色針織外 杏8': {'': 0}}, '標10': {'小香針衣 黑 1+33': {'': 0}}, '標11': {'圓領捲邊針織上衣 咖4': {'': 0}}, '標12': {'熊寶寶皮背心 咖 1+25': {'': 0}}, '標13': {'菱格排釦針織外套 藍5': {'': 0}}, '標14': {'直筒牛仔褲 S1+4': {'': 0}}, '標15': {'針織裙 黑5': {'': 0}}, '標16': {'鬆緊奶奶褲 黑2': {'': 0}}, '標17': {'皮帶老爺褲 黑 1+25': {'': 0}}, '標18': {'皮短外 杏 1+9': {'': 0}}, '標19': {'坑文針織套裝 黑 1+2': {'': 0}}, '標20': {'激瘦皮短裙 深咖10': {'': 0}}, '標21': {'大圍巾 黑1+4': {'': 0}}, '標22': {'四扣長針外 子': {'': 0}}, '標23': {'黑白馬海毛': {'': 0}}, '標24': {'冬日奶霜坑紋長裙 黑': {'': 0}}, '標25': {'長褲燕麥': {'': 0}}, '標26': {'翻領POLO 黑': {'': 0}}, '標27': {'灰色裙子': {'': 0}}, '標28': {'V領長版': {'': 0}}, '標29': {'圓領奶茶': {'': 0}}, '標30': {'坑文 深藍': {'': 0}}, '標31': {'背心 咖': {'': 0}}, '標32': {'前短後長 白': {'': 0}}, '標33': {'高領燕麥上衣': {'': 0}}, '標34': {'長裙 灰': {'': 0}}, '標35': {'麻花園領上衣': {'': 0}}, '標36': {'杏色針織罩衫': {'': 0}}, '標37': {'黑白菱格 黑': {'': 0}}, '標38': {'熊熊拖鞋': {'': 0}}, '標39': {'包包 杏': {'': 0}}, '標40': {'帽子 黑': {'': 0}}, '標41': {'36/咖毛毛拖鞋': {'': 0}}}
     return count
 
-
+# 統計各標號顏色下單的客人名單
 def orderCustomerList(df):
-    # wks = sht.worksheet_by_title('商品')
     count = {}
-    
+
     for i in df.index:
+        print('df i: ', i)
         # 檢查 A 欄是標號的
         if df['標籤'][i] != '' and df['標籤'][i][0] == '標':
             # print('name-------: ', df['標籤'][i], '-', df['顏色/尺寸'][i])
@@ -71,71 +72,68 @@ def orderCustomerList(df):
         elif (df['標籤'][i] == '' or df['標籤'][i].strip()[0] != '標'):
             # 檢查商品名稱沒空白
             if any(df['商品名稱'][i]):
-                # 防止
-                switch = True
                 alist = []
-                name = df['商品名稱'][i]
-                color = df['顏色/尺寸'][i]
-
+                # 在 count 找出商品名稱
                 for x, y in count.items():
                     if df['商品名稱'][i] in y.keys():
-                        # if not any(df['IG account1'][i]):
-                        #     count[x][df['商品名稱'][i]][df['顏色/尺寸'][i]] = []
-                        print('before: ', count)
-                        for j in range(1, 11):
-                            # print('dd')
-                            # print(df['顏色/尺寸'][i])
-                            # 如果 IG account 有帳號繼續加帳號清單，沒有就離開
-                            if any(str(df['IG account'+str(j)][i])):
-                                alist.append(str(df['IG account'+str(j)][i]))
-                                
-                            else:
-                                break
+                        
+                        for row in range(5):
+                            if i+row < df['IG account1'].count() and any(str(df['IG account1'][i])):
+                                # if any(str(df['商品名稱'][i+row])):
+                                #     break
+                                # if any(str(df['IG account1'][i+row])):
+                                for j in range(1, 11):
+                                    # 如果 IG account 有帳號繼續加帳號清單，沒有就離開
+                                    if any(str(df['IG account'+str(j)][i+row])):
+                                        alist.append(str(df['IG account'+str(j)][i+row]))
+                                        
+                                    else:
+                                        break
                         count[x][df['商品名稱'][i]][df['顏色/尺寸'][i]] = alist
-                        print('alist: ', alist)
-                        if df['商品名稱'][i] == '大圍巾' and df['顏色/尺寸'][i] == '灰':
-                            print("x: ", x, 'i: ', i)
-                            print('名稱： ', df['商品名稱'][i], 'color: ', df['顏色/尺寸'][i])
-                            print("checkkkkkkkk: ", count)
+                        # print('alist: ', alist)
+                        # if df['商品名稱'][i] == '大圍巾' and df['顏色/尺寸'][i] == '灰':
+                        #     print("x: ", x, 'i: ', i)
+                        #     print('名稱： ', df['商品名稱'][i], 'color: ', df['顏色/尺寸'][i])
+                        #     print("checkkkkkkkk: ", count)
 
             # 如果商品名稱空白但 IG account1有帳號
-            if not any(df['商品名稱'][i]) and any(df['IG account1'][i]): 
-                # 將原本帳號清單指定給變數
-                print('cccc: ', count)
-                ll = []
+            # if not any(df['商品名稱'][i]) and any(df['IG account1'][i]): 
+            #     # 將原本帳號清單指定給變數
+            #     print('cccc: ', count)
+            #     ll = []
                 
-                # for j in range(1, 11):
-                #     # 檢查是否有帳號
-                #     if  df['IG account'+str(j)][i] != "":
-                #         ll.append(str(df['IG account'+str(j)][i]))
+            #     # for j in range(1, 11):
+            #     #     # 檢查是否有帳號
+            #     #     if  df['IG account'+str(j)][i] != "":
+            #     #         ll.append(str(df['IG account'+str(j)][i]))
 
-                # 從該行開始，往上最多回搜 4 行
-                for row in range(5):
-                    print('i: {}, row: {}'.format(i, row))
-                    if df['商品名稱'][i-row] != '' and df['顏色/尺寸'][i-row] != '':
-                        break
+            #     # 從該行開始，往上最多回搜 4 行
+            #     for row in range(5):
+            #         print('i: {}, row: {}'.format(i, row))
+            #         if df['商品名稱'][i-row] != '' and df['顏色/尺寸'][i-row] != '':
+            #             break
                     
-                    if i-row >= 0 and df['商品名稱'][i-row] == '' and df['顏色/尺寸'][i-row] == '':
-                        for j in range(1, 11):
-                            # 檢查是否有帳號
-                            if  df['IG account'+str(j)][i-row] != "":
-                                ll.append(str(df['IG account'+str(j)][i-row]))
+            #         if i-row >= 0 and df['商品名稱'][i-row] == '' and df['顏色/尺寸'][i-row] == '':
+            #             for j in range(1, 11):
+            #                 # 檢查是否有帳號
+            #                 if  df['IG account'+str(j)][i-row] != "":
+            #                     ll.append(str(df['IG account'+str(j)][i-row]))
 
-                print('ll: ', ll)
-                print('name: ', name)
-                print('color: ', color)
+            #     print('ll: ', ll)
+            #     print('name: ', name)
+            #     print('color: ', color)
 
-                        # 找
-                for x, y in count.items():
-                    # print('xy: ', df['商品名稱'][i-row])
-                    # print('x: ', x)
-                    # print('y: ', y)
-                    # print('bool: ',df['商品名稱'][i-row] in y.keys())
-                    if name in y.keys():
+            #             # 找
+            #     for x, y in count.items():
+            #         # print('xy: ', df['商品名稱'][i-row])
+            #         # print('x: ', x)
+            #         # print('y: ', y)
+            #         # print('bool: ',df['商品名稱'][i-row] in y.keys())
+            #         if name in y.keys():
 
-                        for v in ll:
-                            count[x][name][color].append(v)
-                print('ll count: ', count)
+            #             for v in ll:
+            #                 count[x][name][color].append(v)
+            #     print('ll count: ', count)
 
     return count
 
@@ -222,6 +220,7 @@ if __name__ == '__main__':
     # 'https://docs.google.com/spreadsheets/d/1RIxH4n5lPw734xynrK9xEGB37ftmniKqY7Mx8CixHog/edit#gid=1243175386'
     sht = openGoogleSheets(url)
     df = pd.DataFrame(sht.worksheet_by_title('商品').get_all_records())
+    print(df['IG account1'].count())
     # print(countCommodity(sht))
     # print("dddd:", orderCustomerList(sht))
     # print(df.loc[ df['標籤'] == '標10'])
