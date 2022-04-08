@@ -53,12 +53,12 @@ def orderCustomerList(df):
     for i in df.index:
         print('df i: ', i)
         # 檢查 A 欄是標號的
-        if df['標籤'][i] != '' and df['標籤'][i][0] == '標':
+        if any(str(df['標籤'][i])) and df['標籤'][i][0] == '標':
             # print('name-------: ', df['標籤'][i], '-', df['顏色/尺寸'][i])
             count[df['標籤'][i]] = {}
             count[df['標籤'][i]][df['商品名稱'][i]] = {}
-
-            if (df['店面'][i] != '' or df['工作室'][i] != '') :
+            print('標號: ', count)
+            if df['店面'][i] != '' or df['工作室'][i] != '':
                 account_list = []
                 for j in range(1, 11):
                     # 檢查是否有帳號
@@ -71,15 +71,25 @@ def orderCustomerList(df):
         # 檢查 A 欄不是標號
         elif (df['標籤'][i] == '' or df['標籤'][i].strip()[0] != '標'):
             # 檢查商品名稱沒空白
-            if any(df['商品名稱'][i]):
+            if any(str(df['商品名稱'][i])) and any(str(df['顏色/尺寸'][i])):
                 alist = []
                 # 在 count 找出商品名稱
                 for x, y in count.items():
+                    # 如果商品名稱沒在 count 內就不會統計下單名單
                     if df['商品名稱'][i] in y.keys():
-                        
+                        print("in y : ", df['商品名稱'][i], ' ', df['顏色/尺寸'][i])
+                        # 包含本身這一行，最多往下搜 4 行
                         for row in range(5):
-                            if i+row < df['IG account1'].count() and any(str(df['IG account1'][i])):
-                                # if any(str(df['商品名稱'][i+row])):
+                            print('row: ', row)
+                            # print('iloveu: ', i)
+                            # # print('t----t: ', df['IG account1'][i+row])
+                            # if row > 0 and not any(str(df['商品名稱'][i+row])):
+                            #     break
+                            if not any(str(df['IG account1'][i])): break
+                            
+                            if i+row < df['IG account1'].count() and any(str(df['IG account1'][i+row])):
+                                if row > 0 and any(str(df['商品名稱'][i+row])): break
+                                # if row > 0 and not any(str(df['商品名稱'][i+row])):
                                 #     break
                                 # if any(str(df['IG account1'][i+row])):
                                 for j in range(1, 11):
@@ -89,6 +99,7 @@ def orderCustomerList(df):
                                         
                                     else:
                                         break
+                        print('alist: ', alist)
                         count[x][df['商品名稱'][i]][df['顏色/尺寸'][i]] = alist
                         # print('alist: ', alist)
                         # if df['商品名稱'][i] == '大圍巾' and df['顏色/尺寸'][i] == '灰':
@@ -228,8 +239,6 @@ if __name__ == '__main__':
     o = orderCustomerList(df)
     ws = sht.worksheet_by_title('商品')
     check(df, ws, c, o)
-    print(df['商品名稱'][140], df['顏色/尺寸'][140])
-    print(any(df['商品名稱'][140]))
 
 
     # scheduler = BlockingScheduler()
