@@ -2,10 +2,11 @@
 import pygsheets
 import pandas as pd
 from apscheduler.schedulers.blocking import BlockingScheduler
+import time
 
 # load google sheet
 def openGoogleSheets(url):
-    gc = pygsheets.authorize(service_file='/Users/vito/Project/count_clothes/credentials.json')
+    gc = pygsheets.authorize(service_file='/Users/vito/Project/ig_live/credentials.json')
     sht = gc.open_by_url(url)
     return sht
 
@@ -44,9 +45,10 @@ def countCommodity(sht):
 # 統計各標號顏色下單的客人名單
 def orderCustomerList(df):
     count = {}
+    print('df: ', df)
 
     for i in df.index:
-        print('df i: ', i)
+        df['通知'][i] = ''
         # 檢查 A 欄是標號的
         if any(str(df['標籤'][i])) and df['標籤'][i][0] == '標':
             # print('name-------: ', df['標籤'][i], '-', df['顏色/尺寸'][i])
@@ -72,7 +74,6 @@ def orderCustomerList(df):
                 for x, y in count.items():
                     # 如果商品名稱沒在 count 內就不會統計下單名單
                     if df['商品名稱'][i] in y.keys():
-                        print("in y : ", df['商品名稱'][i], ' ', df['顏色/尺寸'][i])
                         # 包含本身這一行，最多往下搜 4 行
                         for row in range(5):
                             if not any(str(df['IG account1'][i])): break
@@ -118,20 +119,50 @@ def check(df, ws, count, order):
                     df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '上限'] = True
                     buy = ', '.join(y[:sum])
                     cant_buy = ', '.join(y[sum:])
-                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '通知'] = '{} {} 得標者: {}\n候補: {}'.format(k, x, buy, cant_buy)
+                    df.loc[ (df['商品名稱'] == i) & (df['顏色/尺寸'] == x), '通知'] = '{} {} 得標: {}\n候補: {}'.format(k, x, buy, cant_buy)
     print('df: ', df)
     print('-------------------')
+    # print("dddd", df['上限'])
+    print('list', list(df['上限']))
+    print(len(list(df['上限'])))
+    print('ll: ', list(df['通知']))
+    print(len(list(df['通知'])))
+    # ws.update_values('U2:U' + str(len(list(df['上限']))), list(df['上限']))
+    ws.update_col(index=21, values=list(df['上限']), row_offset=1)
+    ws.update_col(index=22, values=list(df['通知']), row_offset=1)
+
     # 不知道怎麼將更新過的 df 更新到 sheets 上，所以暫用迴圈賦值
-    for i in df.index:
-        if any(df['商品名稱'][i]) and any(df['顏色/尺寸'][i]):
-            ck = pd.notnull(df.iloc[i,20])
-            if ck:
-                ws.update_value('U'+ str(i+2), df['上限'][i]) # df['上限'][i]
-            ok = pd.notnull(df.iloc[i,21])
-            if ok:
-                ws.update_value('V'+ str(i+2), df['通知'][i])
+    
+    # for i in df.index:
+
+    #     if any(df['商品名稱'][i]):# and any(df['顏色/尺寸'][i]):
+        
+    #         # print("1")
+    #         # ck = pd.notnull(df.iloc[i,20])
+    #         # print("ck: ", ck)
+    #         # print("df['上限'][i]: ", df['上限'][i])
+    #         # if ck:
+    #         #     print("zzck")
+    #         #     ws.update_value('U'+ str(i+2), df['上限'][i]) # df['上限'][i]
+    #         # print("2")
+    #         # ok = pd.notnull(df.iloc[i,21])
+    #         # print("ok: ", ok)
+    #         # print("df['通知'][i]: ", df['通知'][i])
+    #         # if ok:
+    #         #     print("zzok")
+    #         #     ws.update_value('V'+ str(i+2), df['通知'][i])
+    #         # print("4")
+    #         print("1")
+    #         print("U", ws.get_value('U'+ str(i+2)))
+    #         print("df['上限'][i]: ", df['上限'][i])
+    #         ws.update_value('U'+ str(i+2), df['上限'][i])
+    #         print("2")
+    #         print("V", ws.get_value('V'+ str(i+2)))
+    #         print("df['通知'][i]: ", df['通知'][i])
+    #         ws.update_value('V'+ str(i+2), df['通知'][i])
 
 if __name__ == '__main__':
+    time.sleep(5)
     url = 'https://docs.google.com/spreadsheets/d/11tHWJh-Dp7SdS9BokrPABPWi9eIjKc8qL9NZ3g_tDgc/edit#gid=1243175386'
     # 'https://docs.google.com/spreadsheets/d/1RIxH4n5lPw734xynrK9xEGB37ftmniKqY7Mx8CixHog/edit#gid=1243175386'
     sht = openGoogleSheets(url)
